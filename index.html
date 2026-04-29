@@ -4,7 +4,48 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Benjamin Jordan — AI Product Manager & Founder. Cornell. YC W26. Building products that ship.">
+<meta name="theme-color" content="#0a0e0a">
+<meta name="color-scheme" content="dark">
 <title>// BENJAMIN_JORDAN :: PORTFOLIO.exe</title>
+
+<link rel="canonical" href="https://ben-k-jordan.github.io/portfolio-website/">
+
+<!-- Open Graph (link previews on Slack, LinkedIn, iMessage, etc.) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Benjamin Jordan">
+<meta property="og:title" content="Benjamin Jordan — AI Product Manager & Founder">
+<meta property="og:description" content="Cornell '28. YC W26. Building products that ship. AI Product Manager & Founder.">
+<meta property="og:url" content="https://ben-k-jordan.github.io/portfolio-website/">
+<meta property="og:image" content="https://ben-k-jordan.github.io/portfolio-website/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Benjamin Jordan portfolio — terminal-style aesthetic">
+
+<!-- Twitter card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Benjamin Jordan — AI Product Manager & Founder">
+<meta name="twitter:description" content="Cornell '28. YC W26. Building products that ship.">
+<meta name="twitter:image" content="https://ben-k-jordan.github.io/portfolio-website/og-image.png">
+
+<!-- JSON-LD Person schema for Google Knowledge Graph -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Benjamin Jordan",
+  "url": "https://ben-k-jordan.github.io/portfolio-website/",
+  "jobTitle": "AI Product Manager & Founder",
+  "description": "AI Product Manager & Founder. Cornell '28. YC W26.",
+  "alumniOf": {
+    "@type": "CollegeOrUniversity",
+    "name": "Cornell University"
+  },
+  "sameAs": [
+    "https://github.com/Ben-K-Jordan"
+  ]
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;700&family=Doto:wght@400;700;900&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -53,6 +94,30 @@
 
   a, button, input, textarea, [role="button"] { cursor: none; }
   .term-input { cursor: text; caret-color: var(--green); }
+
+  /* Touch devices have no mouse — restore native cursor + hide the custom dot.
+     Without this, mobile/tablet users see no visual indicator at all on tap. */
+  @media (hover: none), (pointer: coarse) {
+    body, a, button, input, textarea, [role="button"] { cursor: auto; }
+    .cursor-dot { display: none !important; }
+  }
+
+  /* Keyboard-focus indicator. The custom cursor follows the mouse, so keyboard
+     users have nothing to anchor to without an explicit focus ring. The cyan
+     outline + soft glow keeps it on-brand. */
+  :focus { outline: none; }
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(93, 255, 229, 0.18);
+    border-radius: 2px;
+  }
 
   body.hacker-mode {
     --green: #ff5cc8;
@@ -331,6 +396,46 @@
   .topbar-settings:hover .topbar-settings-icon {
     transform: rotate(90deg);
   }
+
+  /* Brand link (logo) — keeps the bracket-styled monospace look but is a real link */
+  .topbar-brand {
+    color: var(--cyan);
+    text-decoration: none;
+    font: inherit;
+    letter-spacing: inherit;
+    transition: text-shadow 0.2s;
+  }
+  .topbar-brand:hover { text-shadow: 0 0 10px var(--cyan); }
+
+  /* ============ MOBILE MENU BUTTON (hamburger) ============
+     Hidden on desktop; visible on screens ≤820px. Toggles the nav drawer. */
+  .topbar-menu-btn {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--green-faint);
+    color: var(--green);
+    font-family: inherit;
+    font-size: 18px;
+    line-height: 1;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .topbar-menu-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .topbar-menu-btn[aria-expanded="true"] {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  .topbar-menu-btn[aria-expanded="true"] .topbar-menu-icon::before {
+    content: '×';
+  }
+  .topbar-menu-btn[aria-expanded="true"] .topbar-menu-icon {
+    font-size: 24px;
+  }
+  .topbar-menu-icon::before { content: '☰'; }
 
   /* ============ SKIP-TO-MAIN LINK ============ */
   .skip-link {
@@ -3912,8 +4017,52 @@
   /* ============ MOBILE ============ */
   @media (max-width: 820px) {
     .container { padding: 0 20px; }
-    .topbar-nav { display: none; }
+
+    /* Touch-target minimums (WCAG 2.5.5 AAA = 44×44). The desktop UI is
+       deliberately dense; on mobile we expand the most-tapped controls so
+       they're comfortable to hit on a phone. */
+    .filter-btn { padding: 12px 16px; font-size: 13px; }
+    .demo-btn { padding: 12px 18px; min-height: 44px; }
+    .topbar-settings { min-height: 44px; padding: 10px 12px; }
+    .settings-close { width: 44px; height: 44px; }
+
+    /* Show hamburger; hide desktop nav by default. Nav becomes a slide-down
+       drawer when .is-mobile-open is added to .topbar. */
+    .topbar-menu-btn { display: inline-flex; }
     .topbar-clock { display: none; }
+    .topbar-nav {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0; right: 0;
+      flex-direction: column;
+      gap: 0;
+      background: rgba(5, 8, 5, 0.98);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--green-faint);
+      border-top: 1px solid var(--green-faint);
+      padding: 8px 20px 16px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+    .topbar.is-mobile-open .topbar-nav { display: flex; }
+    .topbar-nav a,
+    .topbar-nav .topbar-settings,
+    .topbar-nav .topbar-resume {
+      width: 100%;
+      padding: 14px 4px;
+      border-bottom: 1px solid rgba(26, 122, 58, 0.3);
+      font-size: 14px;
+    }
+    .topbar-nav .topbar-resume {
+      margin-top: 8px;
+      border: 1px solid var(--green);
+      padding: 12px;
+      text-align: center;
+    }
+    .topbar-nav .topbar-settings {
+      justify-content: flex-start;
+      border-bottom: 1px solid rgba(26, 122, 58, 0.3);
+    }
     .hero-grid { grid-template-columns: 1fr; gap: 32px; }
     .about-grid { grid-template-columns: 1fr; gap: 32px; }
     .about-merged-grid { grid-template-columns: 1fr; gap: 32px; }
@@ -4013,9 +4162,12 @@
 <div class="topbar">
   <div class="container topbar-inner">
     <div class="topbar-left">
-      <span style="color: var(--cyan);">[BENJAMIN_JORDAN]</span>
+      <a href="#main" class="topbar-brand" aria-label="Back to top">[BENJAMIN_JORDAN]</a>
     </div>
-    <nav class="topbar-nav">
+    <button type="button" class="topbar-menu-btn" id="menuBtn" aria-label="Open menu" aria-controls="topNav" aria-expanded="false">
+      <span class="topbar-menu-icon" aria-hidden="true">☰</span>
+    </button>
+    <nav class="topbar-nav" id="topNav">
       <a href="#about">ABOUT</a>
       <a href="#work">WORK</a>
       <a href="#timeline">CV</a>
@@ -5460,8 +5612,8 @@
           <div class="demo-title-bar">flikr.exe / playable_prototype</div>
           <div class="live-badge">PLAYABLE</div>
         </div>
-        <div class="flikr-stage" id="flikrStage" tabindex="0">
-          <canvas id="flikrCanvas" width="800" height="450"></canvas>
+        <div class="flikr-stage" id="flikrStage" tabindex="0" role="application" aria-label="Flikr lighting puzzle — playable prototype. Use arrow keys or WASD to move, space to act.">
+          <canvas id="flikrCanvas" width="800" height="450" aria-label="Flikr playable game canvas"></canvas>
           <div class="flikr-overlay" id="flikrOverlay">
             <div class="flikr-overlay-title">FLIKR</div>
             <div class="flikr-overlay-sub">A lighting-puzzle prototype. You are a lamp. Your light reveals the platform path through the dark — reach the cyan diamond at the end.</div>
@@ -6666,8 +6818,14 @@
       if (feedBlock) feedBlock.style.display = 'none';
     }
 
-    fetch(`https://api.github.com/users/${GH_USERNAME}/events/public?per_page=30`)
+    // Abort the request if the network hangs — better to hide the feed quickly
+    // than leave the page with a stuck "loading" state.
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 6000);
+
+    fetch(`https://api.github.com/users/${GH_USERNAME}/events/public?per_page=30`, { signal: ctrl.signal })
       .then(r => {
+        clearTimeout(timeoutId);
         if (r.status === 403) throw new Error('rate-limited');
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -7522,6 +7680,52 @@
 
     // Apply settings on load
     loadSettings();
+  })();
+
+  // ============ MOBILE NAV MENU ============
+  // Hamburger toggles a drop-down drawer containing the nav links.
+  // Closes on: link click, settings button click, Escape, outside click,
+  // or when the viewport grows past the mobile breakpoint.
+  (function() {
+    const btn = document.getElementById('menuBtn');
+    const topbar = document.querySelector('.topbar');
+    const nav = document.getElementById('topNav');
+    if (!btn || !topbar || !nav) return;
+
+    function setOpen(open) {
+      topbar.classList.toggle('is-mobile-open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    }
+
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      setOpen(!topbar.classList.contains('is-mobile-open'));
+    });
+
+    // Close when any nav link is tapped (so the drawer doesn't stay open after navigation)
+    nav.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => setOpen(false));
+    });
+
+    // Outside click closes the drawer
+    document.addEventListener('click', e => {
+      if (!topbar.classList.contains('is-mobile-open')) return;
+      if (topbar.contains(e.target)) return;
+      setOpen(false);
+    });
+
+    // Escape closes
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && topbar.classList.contains('is-mobile-open')) {
+        setOpen(false);
+        btn.focus();
+      }
+    });
+
+    // Close automatically when resizing past the breakpoint
+    const mq = window.matchMedia('(min-width: 821px)');
+    mq.addEventListener('change', e => { if (e.matches) setOpen(false); });
   })();
 
   // ============ KONAMI CODE ============

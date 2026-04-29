@@ -90,56 +90,22 @@ Same idea. Drag-and-drop deploy:
 
 ## adding the LLM chat backend (optional)
 
-Right now the terminal chat falls back to keyword pattern matching. If you want real LLM responses, here's the path:
+Right now the terminal chat falls back to keyword pattern matching. If you want real LLM responses, here's the path. A production-ready worker is included in this repo at [`worker/chat-worker.js`](./worker/chat-worker.js) — it includes CORS handling, input validation, prompt caching, error masking, and a system prompt about Ben.
 
 ### Cloudflare Worker (recommended — free tier)
 
-1. In your Cloudflare Pages project, go to Settings → Functions → Add Worker
-2. Use this template (replace with your Anthropic API key, set as a secret named `ANTHROPIC_API_KEY`):
+1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → **Create** → **Hello World** template
+2. Open the editor, delete the default code, paste the entire contents of `worker/chat-worker.js`
+3. Click **Save & Deploy**
+4. **Settings** → **Variables and Secrets** → **Add** → Type: **Secret**
+   - Name: `ANTHROPIC_API_KEY`
+   - Value: your Anthropic API key from [console.anthropic.com](https://console.anthropic.com)
+5. Copy the Worker URL (e.g. `https://your-worker.YOUR-SUBDOMAIN.workers.dev`)
+6. In `index.html`, search for `const CHAT_ENDPOINT = '';` and paste the URL
+7. **Important:** in `worker/chat-worker.js`, edit the `ALLOWED_ORIGINS` array to include only your real site domain — leaving `'*'` lets any site call (and bill) your worker
+8. Commit and push. Done.
 
-```js
-export default {
-  async fetch(request, env) {
-    if (request.method !== 'POST') {
-      return new Response('Method not allowed', { status: 405 });
-    }
-
-    const { messages } = await request.json();
-
-    // Add a system prompt with context about Ben
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
-        system: `You are an AI assistant on Ben Jordan's portfolio site.
-                 Be concise, helpful, and professional. Ben is a Cornell '28 student,
-                 incoming PM intern at IBM watsonx.ai, former Founder in Residence at
-                 Ventura (YC W26). Answer questions visitors might have about his work.`,
-        messages: messages,
-      }),
-    });
-
-    const data = await r.json();
-    const reply = data.content?.[0]?.text || 'sorry, something went wrong.';
-
-    return new Response(JSON.stringify({ reply }), {
-      headers: { 'content-type': 'application/json' },
-    });
-  },
-};
-```
-
-3. Deploy the Worker, get its URL (e.g. `https://chat.your-subdomain.workers.dev`)
-4. In `index.html`, set `const CHAT_ENDPOINT = 'https://chat.your-subdomain.workers.dev';`
-5. Push the change. Done.
-
-**Cost:** Cloudflare Workers free tier = 100k requests/day. Anthropic API for Claude Haiku is fractions of a cent per chat. Realistic monthly cost for a portfolio: $0–$5.
+**Cost:** Cloudflare Workers free tier = 100k requests/day. Anthropic Haiku 4.5 = $1 per 1M input tokens, $5 per 1M output tokens. Prompt caching (already wired up) cuts input cost ~90% after the first request in each 5-minute window. Realistic monthly cost for a portfolio: $0–$5.
 
 ---
 
