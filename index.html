@@ -6513,9 +6513,13 @@
   updateUptime();
 
   // ============ RESUME LINK PLACEHOLDER ============
-  // Replace this URL with the actual hosted PDF when you publish
-  const RESUME_URL = '#'; // e.g. './benjamin_jordan_resume.pdf'
-  document.getElementById('resumeLink').href = RESUME_URL;
+  const RESUME_URL = './resume.pdf';
+  const resumeLinkEl = document.getElementById('resumeLink');
+  if (resumeLinkEl) {
+    resumeLinkEl.href = RESUME_URL;
+    resumeLinkEl.setAttribute('download', '');
+    resumeLinkEl.setAttribute('rel', 'noopener');
+  }
   document.getElementById('resumeLink2').href = RESUME_URL;
   if (RESUME_URL !== '#') {
     document.getElementById('resumeLink').setAttribute('download', '');
