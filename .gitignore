@@ -1,0 +1,29 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor cruft
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local env files
+.env
+.env.local
+
+# Build artifacts (in case anyone adds tooling later)
+node_modules/
+dist/
+build/
+.cache/
+
+# Misc
+*.bak
+*.tmp
