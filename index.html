@@ -407,6 +407,51 @@
   }
   .topbar-brand:hover { text-shadow: 0 0 10px var(--cyan); }
 
+  /* ============ TERMINAL PROMPT (replaces brand) ============
+     bj@portfolio:~$ <typed-cmd>█  — clicking the prefix returns to top.
+     The cmd span is filled by the filesystem-nav JS when nav links are clicked. */
+  .terminal-prompt {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+    font-family: 'VT323', 'JetBrains Mono', monospace;
+    font-size: 17px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--green);
+    text-decoration: none;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .prompt-prefix {
+    color: var(--cyan);
+    transition: text-shadow 0.2s;
+  }
+  .terminal-prompt:hover .prompt-prefix {
+    text-shadow: 0 0 10px var(--cyan);
+  }
+  .prompt-cmd {
+    color: var(--green);
+    text-shadow: 0 0 6px var(--green-glow);
+    min-width: 0;
+  }
+  .prompt-cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 0.95em;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green-glow);
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: promptCursorBlink 1s steps(2) infinite;
+  }
+  @keyframes promptCursorBlink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+  body.motion-reduced .prompt-cursor { animation: none; }
+
   /* ============ MOBILE MENU BUTTON (hamburger) ============
      Hidden on desktop; visible on screens ≤820px. Toggles the nav drawer. */
   .topbar-menu-btn {
@@ -4026,6 +4071,10 @@
     .topbar-settings { min-height: 44px; padding: 10px 12px; }
     .settings-close { width: 44px; height: 44px; }
 
+    /* Shorten the terminal prompt on small screens — the full
+       "bj@portfolio:~$" is too long alongside the hamburger button. */
+    .terminal-prompt { font-size: 15px; }
+
     /* Show hamburger; hide desktop nav by default. Nav becomes a slide-down
        drawer when .is-mobile-open is added to .topbar. */
     .topbar-menu-btn { display: inline-flex; }
@@ -4143,10 +4192,112 @@
     .proof-logo { font-size: 14px; }
   }
 
+  /* On very small screens the full prompt prefix runs out of room next to the
+     hamburger button — collapse it to a short '~$'. */
+  @media (max-width: 480px) {
+    .prompt-prefix { font-size: 0; }
+    .prompt-prefix::before {
+      content: '~$';
+      font-size: 15px;
+      color: var(--cyan);
+    }
+  }
+
   ::selection { background: var(--green); color: var(--bg); }
+
+  /* ============ BIOS BOOT SCREEN ============
+     Shown on first visit only. Mimics an 80s PC boot: BIOS POST text scrolls
+     line by line, then fades to reveal the site. localStorage flag skips it
+     for returning visitors. Skipped entirely when motion is reduced. */
+  .boot-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg-deep);
+    color: var(--green);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 6vh 7vw;
+    overflow: hidden;
+    font-family: 'VT323', 'JetBrains Mono', monospace;
+    font-size: clamp(15px, 2.2vw, 22px);
+    line-height: 1.45;
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 6px var(--green-glow);
+  }
+  /* Returning visitors / reduced-motion: hidden from first paint via the head
+     script that adds .skip-boot to <html>. */
+  html.skip-boot .boot-screen { display: none !important; }
+
+  .boot-line {
+    display: block;
+    white-space: pre-wrap;
+    opacity: 0;
+    animation: bootLineIn 0.05s linear forwards;
+  }
+  @keyframes bootLineIn {
+    to { opacity: 1; }
+  }
+  .boot-cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1em;
+    background: var(--green);
+    vertical-align: text-bottom;
+    margin-left: 4px;
+    animation: bootCursorBlink 0.6s steps(2) infinite;
+  }
+  @keyframes bootCursorBlink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+  .boot-screen.is-fading {
+    animation: bootFade 0.55s ease-out forwards;
+  }
+  @keyframes bootFade {
+    to { opacity: 0; visibility: hidden; }
+  }
+  .boot-skip {
+    position: absolute;
+    bottom: 4vh; right: 5vw;
+    color: var(--green-faint);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    pointer-events: none;
+    animation: bootLineIn 0.05s 1.4s linear forwards;
+    opacity: 0;
+  }
+
 </style>
+<script>
+  // Run as early as possible: hide the boot screen from first paint for
+  // returning visitors, reduced-motion users, and when ?boot=1 is NOT present.
+  // This avoids FOUC where the boot screen flashes briefly before JS removes it.
+  (function() {
+    try {
+      var force = location.search.indexOf('boot=1') !== -1;
+      var seen = !!localStorage.getItem('bj_booted_v1');
+      var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (force) return;            // ?boot=1 → always show
+      if (seen || reduced) {
+        document.documentElement.classList.add('skip-boot');
+      }
+    } catch (e) {
+      // localStorage blocked → just show the boot screen, no harm
+    }
+  })();
+</script>
 </head>
 <body>
+
+<!-- BIOS boot screen (first-visit only — see CSS + JS at bottom) -->
+<div class="boot-screen" id="bootScreen" aria-hidden="true" role="presentation">
+  <div id="bootLines"></div>
+  <div class="boot-skip">PRESS ANY KEY TO SKIP</div>
+</div>
+
 
 <!-- CRT effect layers — overlay only, no transform/filter on content (preserves position:fixed) -->
 <div class="crt-roll" aria-hidden="true"></div>
@@ -4162,22 +4313,24 @@
 <div class="topbar">
   <div class="container topbar-inner">
     <div class="topbar-left">
-      <a href="#main" class="topbar-brand" aria-label="Back to top">[BENJAMIN_JORDAN]</a>
+      <a href="#main" class="terminal-prompt" aria-label="Back to top">
+        <span class="prompt-prefix">bj@portfolio:~$</span><span class="prompt-cmd" id="promptCmd"></span><span class="prompt-cursor" aria-hidden="true"></span>
+      </a>
     </div>
     <button type="button" class="topbar-menu-btn" id="menuBtn" aria-label="Open menu" aria-controls="topNav" aria-expanded="false">
       <span class="topbar-menu-icon" aria-hidden="true">☰</span>
     </button>
     <nav class="topbar-nav" id="topNav">
-      <a href="#about">ABOUT</a>
-      <a href="#work">WORK</a>
-      <a href="#timeline">CV</a>
-      <a href="#/writing">WRITING</a>
-      <a href="#contact">CONTACT</a>
+      <a href="#about" data-cmd="cd /about">~/about</a>
+      <a href="#work" data-cmd="ls /work">~/work</a>
+      <a href="#timeline" data-cmd="cat /cv.txt">~/cv</a>
+      <a href="#/writing" data-cmd="cd /writing">~/writing</a>
+      <a href="#contact" data-cmd="mail ben@">~/contact</a>
       <button type="button" class="topbar-settings" id="settingsBtn" aria-label="Open settings" aria-haspopup="dialog" aria-expanded="false">
         <span class="topbar-settings-icon" aria-hidden="true">⚙</span>
         <span class="topbar-settings-label">SETTINGS</span>
       </button>
-      <a href="#" class="topbar-resume" id="resumeLink">RESUME ↓</a>
+      <a href="#" class="topbar-resume" id="resumeLink" data-cmd="wget resume.pdf">~/resume.pdf</a>
     </nav>
   </div>
 </div>
@@ -4225,6 +4378,14 @@
       <input type="checkbox" id="toggleHighContrast" class="settings-toggle-input">
       <span class="settings-toggle-switch" aria-hidden="true"></span>
     </label>
+  </section>
+
+  <section class="settings-group">
+    <h3 class="settings-group-title">Easter eggs</h3>
+    <p class="settings-note">
+      The site greets first-time visitors with a BIOS boot sequence. You've already seen it; click below to play it again.
+    </p>
+    <button type="button" class="settings-reset" id="settingsReplayBoot">replay boot sequence</button>
   </section>
 
   <section class="settings-group">
@@ -7682,8 +7843,159 @@
       });
     });
 
+    // Replay BIOS boot sequence
+    document.getElementById('settingsReplayBoot')?.addEventListener('click', () => {
+      if (typeof window.__bjReplayBoot === 'function') window.__bjReplayBoot();
+    });
+
     // Apply settings on load
     loadSettings();
+  })();
+
+  // ============ BIOS BOOT SEQUENCE ============
+  // Runs on first visit only (localStorage gates it). The head script in <head>
+  // hides .boot-screen via .skip-boot on <html> when we shouldn't play it, so
+  // returning visitors / reduced-motion users see no flicker.
+  (function() {
+    const STORAGE_KEY = 'bj_booted_v1';
+    const screen = document.getElementById('bootScreen');
+    const lines = document.getElementById('bootLines');
+    if (!screen || !lines) return;
+    if (document.documentElement.classList.contains('skip-boot')) return;
+
+    // Build boot text. Some lines have an artificial pause (the "..."  spans)
+    // so the rhythm feels mechanical rather than uniform.
+    const now = new Date();
+    const fakeIp = '192.168.0.' + (40 + Math.floor(Math.random() * 60));
+    const dateStr = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 8);
+    const BOOT_LINES = [
+      'SYSTEM/86 BIOS v1.3',
+      'COPYRIGHT (C) 1986 BJ-CORP',
+      '',
+      'PERFORMING POST...',
+      'RAM CHECK: 640K OK',
+      'DETECTING DRIVES........... [OK]',
+      'NETWORK INTERFACE: CONNECTED [' + fakeIp + ']',
+      'TIME: ' + dateStr,
+      '',
+      'LOADING PORTFOLIO.SYS........... [OK]',
+      'INITIALIZING DISPLAY........... [OK]',
+      'MOUNTING /home/ben........... [OK]',
+      '',
+      'READY.',
+    ];
+
+    let i = 0;
+    let cancelled = false;
+    const lineDelay = 110;
+
+    function appendLine(text) {
+      const el = document.createElement('span');
+      el.className = 'boot-line';
+      // The empty spacer lines need an nbsp so they take a row of vertical space
+      el.textContent = text === '' ? ' ' : text;
+      lines.appendChild(el);
+    }
+
+    function tick() {
+      if (cancelled) return;
+      if (i < BOOT_LINES.length) {
+        appendLine(BOOT_LINES[i]);
+        i++;
+        setTimeout(tick, lineDelay);
+      } else {
+        // Append the blinking cursor on the prompt line
+        const promptLine = document.createElement('span');
+        promptLine.className = 'boot-line';
+        promptLine.innerHTML = '&gt; <span class="boot-cursor"></span>';
+        lines.appendChild(promptLine);
+        setTimeout(finish, 420);
+      }
+    }
+
+    function finish() {
+      if (screen.classList.contains('is-fading')) return;
+      screen.classList.add('is-fading');
+      try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+      setTimeout(() => { screen.style.display = 'none'; }, 600);
+    }
+
+    function skip() {
+      cancelled = true;
+      finish();
+      document.removeEventListener('keydown', skipKey);
+      screen.removeEventListener('click', skip);
+    }
+    function skipKey(e) {
+      // Any key skips, but let modifier-only presses through
+      if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta') return;
+      e.preventDefault();
+      skip();
+    }
+    document.addEventListener('keydown', skipKey);
+    screen.addEventListener('click', skip);
+
+    // Start
+    tick();
+  })();
+
+  // Expose a global to replay the boot sequence (wired from settings panel)
+  window.__bjReplayBoot = function() {
+    try { localStorage.removeItem('bj_booted_v1'); } catch (e) {}
+    location.search = location.search.replace(/[?&]boot=1\b/, '') + (location.search.includes('?') ? '&' : '?') + 'boot=1';
+  };
+
+  // ============ FILESYSTEM NAV (terminal prompt typing) ============
+  // When a nav link with [data-cmd] is clicked, the command is typed into the
+  // topbar prompt while navigation happens in parallel. No perceived latency:
+  // the actual nav (smooth-scroll or hash route) fires immediately on click;
+  // the typing is purely visual feedback that lands on the prompt over the
+  // next ~250ms and clears after a brief hold.
+  (function() {
+    const promptCmd = document.getElementById('promptCmd');
+    if (!promptCmd) return;
+
+    let typingTimer = null;
+    let clearTimer = null;
+    const reduced = () => document.body.classList.contains('motion-reduced')
+      || matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function typeCommand(cmd) {
+      if (typingTimer) clearInterval(typingTimer);
+      if (clearTimer) clearTimeout(clearTimer);
+
+      // Reduced motion: show the command instantly, no per-char animation.
+      if (reduced()) {
+        promptCmd.textContent = ' ' + cmd;
+        clearTimer = setTimeout(() => {
+          if (promptCmd.textContent === ' ' + cmd) promptCmd.textContent = '';
+        }, 1400);
+        return;
+      }
+
+      promptCmd.textContent = ' ';
+      let i = 0;
+      typingTimer = setInterval(() => {
+        i++;
+        promptCmd.textContent = ' ' + cmd.slice(0, i);
+        if (i >= cmd.length) {
+          clearInterval(typingTimer);
+          typingTimer = null;
+          clearTimer = setTimeout(() => {
+            if (promptCmd.textContent === ' ' + cmd) promptCmd.textContent = '';
+          }, 1100);
+        }
+      }, 22);
+    }
+
+    // Wire every element with [data-cmd]. Click + Enter (keyboard activation
+    // already fires a click on anchors/buttons, so we only need 'click').
+    document.querySelectorAll('[data-cmd]').forEach(el => {
+      el.addEventListener('click', () => {
+        const cmd = el.getAttribute('data-cmd');
+        if (cmd) typeCommand(cmd);
+      });
+    });
   })();
 
   // ============ MOBILE NAV MENU ============
