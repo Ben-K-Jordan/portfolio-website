@@ -1440,9 +1440,16 @@
     font-family: 'VT323', monospace;
     font-size: clamp(28px, 4vw, 44px);
     color: var(--green);
-    text-shadow: 0 0 12px var(--green-glow);
+    /* Permanent chromatic aberration — mimics a real CRT's imperfect RGB
+       convergence (red gun ~1px left, cyan ~1px right of the green phosphor),
+       layered with the green halo. */
+    text-shadow:
+      -1px 0 0 rgba(255, 50, 80, 0.4),
+      1px 0 0 rgba(80, 255, 230, 0.4),
+      0 0 12px var(--green-glow);
     letter-spacing: 0.02em;
   }
+  body.high-contrast .section-title { text-shadow: none; }
   .section-meta {
     margin-left: auto;
     font-size: 11px; color: var(--green-faint);
@@ -3268,6 +3275,76 @@
     padding: 80px 32px 120px;
     position: relative;
   }
+
+  /* ============ 404 — bash-styled error overlay ============
+     Shown for unknown #/... hash routes. Wider than case-study pages so the
+     valid-routes column has room. Pure terminal aesthetic — no headings, no
+     case-study chrome. */
+  .not-found-inner {
+    max-width: 720px;
+    padding: 14vh 6vw 8vh;
+    font-family: 'VT323', 'JetBrains Mono', monospace;
+    font-size: clamp(16px, 2vw, 22px);
+    line-height: 1.55;
+    color: var(--green);
+    text-shadow: 0 0 6px var(--green-glow);
+  }
+  .nf-block { margin-bottom: 1.4em; }
+  .nf-line { white-space: pre-wrap; }
+  .nf-prompt { color: var(--cyan); }
+  .nf-error {
+    color: var(--amber);
+    text-shadow: 0 0 6px rgba(255, 176, 0, 0.45);
+  }
+  .nf-label {
+    color: var(--green-faint);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 1.6em 0 0.6em;
+    text-shadow: none;
+  }
+  .nf-routes {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.4em;
+    columns: 2;
+    column-gap: 32px;
+  }
+  .nf-routes li {
+    margin: 0.05em 0;
+    break-inside: avoid;
+  }
+  .nf-routes li::before {
+    content: '> ';
+    color: var(--green-faint);
+  }
+  .nf-routes a {
+    color: var(--green-dim);
+    text-decoration: none;
+    transition: color 0.15s, text-shadow 0.15s;
+  }
+  .nf-routes a:hover,
+  .nf-routes a:focus-visible {
+    color: var(--cyan);
+    text-shadow: 0 0 10px var(--cyan);
+  }
+  .nf-back {
+    color: var(--green);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .nf-back:hover { color: var(--cyan); }
+  .nf-back-cursor {
+    display: inline-block;
+    color: var(--green);
+    animation: promptCursorBlink 1s steps(2) infinite;
+  }
+  body.motion-reduced .nf-back-cursor { animation: none; }
+  @media (max-width: 600px) {
+    .nf-routes { columns: 1; }
+  }
   .detail-back {
     display: inline-flex; align-items: center; gap: 8px;
     color: var(--green-dim);
@@ -3308,8 +3385,13 @@
     line-height: 0.98;
     letter-spacing: 0.01em;
     margin-bottom: 16px;
-    text-shadow: 0 0 16px var(--green-glow);
+    /* Chromatic aberration (see .section-title) */
+    text-shadow:
+      -1.5px 0 0 rgba(255, 50, 80, 0.4),
+      1.5px 0 0 rgba(80, 255, 230, 0.4),
+      0 0 16px var(--green-glow);
   }
+  body.high-contrast .detail-title { text-shadow: none; }
   .detail-tagline {
     font-family: 'Fraunces', serif;
     font-style: italic;
@@ -6314,6 +6396,36 @@
     <p class="now-footer">
       <em>This page is inspired by <a href="https://nownownow.com/about" target="_blank" rel="noopener">/now pages</a>. I update it monthly.</em>
     </p>
+  </div>
+</article>
+
+<!-- ============ 404 — bash-styled error for unknown #/... routes ============ -->
+<article class="project-detail not-found" id="detail-404" data-page="404">
+  <div class="project-detail-inner not-found-inner">
+    <div class="nf-block">
+      <div class="nf-line"><span class="nf-prompt">bj@portfolio:~$</span> cd <span class="nf-path-echo">/?</span></div>
+      <div class="nf-line nf-error">bash: cd: <span class="nf-path-echo">/?</span>: No such file or directory</div>
+    </div>
+
+    <div class="nf-label">// VALID ROUTES</div>
+    <ul class="nf-routes">
+      <li><a href="#about">~/about</a></li>
+      <li><a href="#work">~/work</a></li>
+      <li><a href="#timeline">~/cv</a></li>
+      <li><a href="#contact">~/contact</a></li>
+      <li><a href="#/writing">~/writing</a></li>
+      <li><a href="#/thinking">~/thinking</a></li>
+      <li><a href="#/now">~/now</a></li>
+      <li><a href="#/projects/ventura">~/projects/ventura</a></li>
+      <li><a href="#/projects/hillside">~/projects/hillside</a></li>
+      <li><a href="#/projects/flikr">~/projects/flikr</a></li>
+      <li><a href="#/projects/study-bot">~/projects/study-bot</a></li>
+      <li><a href="#/writing/claude-code-teardown">~/writing/claude-code-teardown</a></li>
+    </ul>
+
+    <div class="nf-block">
+      <div class="nf-line"><span class="nf-prompt">bj@portfolio:~$</span> <a href="#main" id="detail-404-back" class="nf-back">cd ~/<span class="nf-back-cursor">█</span></a></div>
+    </div>
   </div>
 </article>
 
@@ -9563,6 +9675,25 @@ QTY  ITEM<br>
       });
     }
 
+    function show404(hash) {
+      const el = document.getElementById('detail-404');
+      if (!el) return;
+      const path = hash.replace(/^#/, '') || '/?';
+      // Echo the bad path into the bash error message
+      el.querySelectorAll('.nf-path-echo').forEach(n => { n.textContent = path; });
+      // Close any other overlay first
+      document.querySelectorAll('.project-detail.is-open').forEach(o => {
+        if (o !== el) o.classList.remove('is-open');
+      });
+      // Remember scroll position so the back link can restore it
+      if (!document.body.classList.contains('detail-open')) {
+        scrollMemory = window.scrollY;
+      }
+      el.classList.add('is-open');
+      document.body.classList.add('detail-open');
+      el.scrollTop = 0;
+    }
+
     function syncFromHash() {
       const hash = window.location.hash;
 
@@ -9579,7 +9710,13 @@ QTY  ITEM<br>
         return;
       }
 
-      // No match — close any open overlay
+      // Unknown #/... route → 404 overlay
+      if (hash.startsWith('#/')) {
+        show404(hash);
+        return;
+      }
+
+      // Plain anchor (#about) or empty — close any open overlay
       closeAllDetails();
     }
 
